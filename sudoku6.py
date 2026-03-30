@@ -3,37 +3,31 @@ import clingo
 from sudoku_board import Sudoku
 
 class Context:
-    def __init__(self, sudoku: Sudoku):
-        self.sudoku = sudoku
+    def __init__(self, board: Sudoku):
+        self.sudoku = board
 
-    def initial(self):
+    def initial(self) -> list[clingo.symbol.Symbol]:
         facts = []
         for (r, c), v in self.sudoku.board.items():
-            facts.append(clingo.Function("initial", [clingo.Number(r), clingo.Number(c), clingo.Number(v)]))
+            facts.append(clingo.Function("", [clingo.Number(r), clingo.Number(c), clingo.Number(v)]))
         return facts
 
-class SudokuApp(clingo.ClingoApp):
-    def __init__(self, name):
-        self.program_name = name
-
-    def main(self, control, files):
-        # Read the text-based Sudoku board
+class ClingoApp(clingo.application.Application):
+    def main(self, ctl, files):
         with open(files[0], 'r') as f:
             content = f.read()
         
         sudoku_instance = Sudoku.from_str(content)
         ctx = Context(sudoku_instance)
 
-        # Load the logic AND the python-bridge file
-        control.load("sudoku.lp")
-        control.load("sudoku_py.lp")
-        
-        # Grounding using the 'context' parameter
-        control.ground([("base", [])], context=ctx)
-        control.solve()
+        ctl.load("sudoku.lp")
+        ctl.load("sudoku_py.lp")
 
-    def print_model(self, model):
+        ctl.ground([("base", [])], context=ctx)
+        ctl.solve()
+
+    def print_model(self, model, printer):
         print(Sudoku.from_model(model))
 
 if __name__ == "__main__":
-    clingo.clingo_main(SudokuApp(sys.argv[0]), sys.argv[1:])
+    clingo.application.clingo_main(ClingoApp())
