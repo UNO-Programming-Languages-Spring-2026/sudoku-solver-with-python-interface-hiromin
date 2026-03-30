@@ -7,7 +7,6 @@ class Context:
         self.sudoku = sudoku
 
     def initial(self):
-        # Generates initial(r, c, v) facts for Clingo
         facts = []
         for (r, c), v in self.sudoku.board.items():
             facts.append(clingo.Function("initial", [clingo.Number(r), clingo.Number(c), clingo.Number(v)]))
@@ -18,16 +17,18 @@ class SudokuApp(clingo.ClingoApp):
         self.program_name = name
 
     def main(self, control, files):
-        # Read the .txt file content
+        # Read the text-based Sudoku board
         with open(files[0], 'r') as f:
             content = f.read()
         
-        # Build context from the string
         sudoku_instance = Sudoku.from_str(content)
         ctx = Context(sudoku_instance)
 
+        # Load the logic AND the python-bridge file
         control.load("sudoku.lp")
         control.load("sudoku_py.lp")
+        
+        # Grounding using the 'context' parameter
         control.ground([("base", [])], context=ctx)
         control.solve()
 
