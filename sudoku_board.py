@@ -1,40 +1,46 @@
-from typing import Tuple
 import clingo
 
-
 class Sudoku:
-    def __init__(self, sudoku: dict[Tuple[int, int], int]):
-        self.sudoku = sudoku
+    def __init__(self, board: dict):
+        # board is a dict: {(row, col): value}
+        self.board = board
+
+    @classmethod
+    def from_model(cls, model: clingo.solving.Model) -> 'Sudoku':
+        board = {}
+        for symbol in model.symbols(shown=True):
+            if symbol.name == "sudoku" and len(symbol.arguments) == 3:
+                r = symbol.arguments[0].number
+                c = symbol.arguments[1].number
+                v = symbol.arguments[2].number
+                board[(r, c)] = v
+        return cls(board)
+
+    @classmethod
+    def from_str(cls, s: str) -> 'Sudoku':
+        board = {}
+        # Filter out empty strings from extra spaces/newlines
+        tokens = s.split()
+        for idx, token in enumerate(tokens):
+            if token != "-":
+                row = (idx // 9) + 1
+                col = (idx % 9) + 1
+                board[(row, col)] = int(token)
+        return cls(board)
 
     def __str__(self) -> str:
-        s = ""
-        # Printing a str of sudoku as text in 9x9 grid format
-        for j in range(1, 10):
-            for i in range(1, 10):
-                s += str(self.sudoku[i, j]) + " "
-            s += "\n"
-        return s
-
-    @classmethod
-    def from_str(cls, s: str) -> "Sudoku":
-        sudoku = {}
-        # Create a sudoku class object from a 9x9 string representation of a sudoku puzzle
-        lines = s.strip().splitlines()
-        for j, line in enumerate(lines, start=1):
-            for i, char in enumerate(line.strip().split(), start=1):
-                sudoku[i, j] = int(char)
-        return cls(sudoku)
-
-    @classmethod
-    def from_model(cls, model: clingo.solving.Model) -> "Sudoku":
-        sudoku = {}
-        # Create a sudoku class object from a clingo model
-        # Look at this code. Not sure how good it is.
-        for atom in model:
-            if atom.name == "cell" and len(atom.arguments) == 3:
-                i = atom.arguments[0].number
-                j = atom.arguments[1].number
-                value = atom.arguments[2].number
-                sudoku[i, j] = value
-        return cls(sudoku)
-
+        lines = []
+        for r in range(1, 10):
+            row_parts = []
+            for c in range(1, 10):
+                val = str(self.board.get((r, c), "-"))
+                row_parts.append(val)
+                # Extra space between 3x3 blocks horizontally
+                if c in [3, 6]:
+                    row_parts.append("")
+            
+            lines.append(" ".join(row_parts).rstrip())
+            # Empty line between 3x3 blocks vertically
+            if r in [3, 6]:
+                lines.append("")
+        return "\n".join(lines)
