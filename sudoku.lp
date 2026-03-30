@@ -19,8 +19,6 @@ sudoku(X,Y,N) :- initial(X,Y,N).
 :- sudoku(X,Y,N), sudoku(X',Y,N), X != X'.
 
 % Each number appears exactly once per 3x3 subgrid
-:- sudoku(X,Y,N), sudoku(X',Y',N), (X,Y) != (X',Y'),
-   ((X-1)/3) == ((X'-1)/3),
-   ((Y-1)/3) == ((Y'-1)/3).
+:- sudoku(X,Y,N), sudoku(X',Y',N), (X,Y) != (X',Y'), ((X-1)/3) == ((X'-1)/3), ((Y-1)/3) == ((Y'-1)/3).
 
 #show sudoku/3.
