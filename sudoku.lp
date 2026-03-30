@@ -24,6 +24,3 @@ sudoku(X,Y,N) :- initial(X,Y,N).
    ((Y-1)/3) == ((Y'-1)/3).
 
 #show sudoku/3.
-
-
-#show sudoku/3.
