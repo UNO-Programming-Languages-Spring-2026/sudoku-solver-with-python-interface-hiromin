@@ -14,9 +14,8 @@ class SudokuApp(clingo.ClingoApp):
         control.solve()
 
     def print_model(self, model):
-        # Question 4: Use the __str__ method from Sudoku class
-        sudoku_obj = Sudoku.from_model(model)
-        print(sudoku_obj)
+        # Question 4: Print the friendly grid format
+        print(Sudoku.from_model(model))
 
 if __name__ == "__main__":
     clingo.clingo_main(SudokuApp(sys.argv[0]), sys.argv[1:])
