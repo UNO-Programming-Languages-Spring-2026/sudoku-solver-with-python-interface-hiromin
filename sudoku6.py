@@ -2,52 +2,37 @@ import sys
 import clingo
 from sudoku_board import Sudoku
 
-
 class Context:
-    
-    # Store Sudoku object for grounding.
-    def __init__(self, board: Sudoku):
-        self.board = board
+    def __init__(self, sudoku: Sudoku):
+        self.sudoku = sudoku
 
-    # Convert Sudoku board into clingo facts: initial(r,c,v)
     def initial(self):
+        # Generates initial(r, c, v) facts for Clingo
         facts = []
-
-        for (r, c), v in self.board.board.items():
-            facts.append(
-                clingo.Function(
-                    "initial",
-                    [clingo.Number(r), clingo.Number(c), clingo.Number(v)]
-                )
-            )
-
+        for (r, c), v in self.sudoku.board.items():
+            facts.append(clingo.Function("initial", [clingo.Number(r), clingo.Number(c), clingo.Number(v)]))
         return facts
 
+class SudokuApp(clingo.ClingoApp):
+    def __init__(self, name):
+        self.program_name = name
 
-class SudokuApp(clingo.Application):
-
-    def __init__(self):
-        self.program_name = "sudoku"
-
-    # Read text input, convert to Sudoku, and solve.
-    def main(self, ctl, files):
-        with open(files[0]) as f:
+    def main(self, control, files):
+        # Read the .txt file content
+        with open(files[0], 'r') as f:
             content = f.read()
+        
+        # Build context from the string
+        sudoku_instance = Sudoku.from_str(content)
+        ctx = Context(sudoku_instance)
 
-        sudoku = Sudoku.from_str(content)
-        context = Context(sudoku)
+        control.load("sudoku.lp")
+        control.load("sudoku_py.lp")
+        control.ground([("base", [])], context=ctx)
+        control.solve()
 
-        ctl.load("sudoku.lp")
-        ctl.load("sudoku_py.lp")
-
-        ctl.ground([("base", [])], context=context)
-        ctl.solve(on_model=self.on_model)
-
-    # Print solved sudoku in required format.
-    def on_model(self, model):
-        sudoku = Sudoku.from_model(model)
-        print(sudoku)
-
+    def print_model(self, model):
+        print(Sudoku.from_model(model))
 
 if __name__ == "__main__":
-    clingo.clingo_main(SudokuApp(), sys.argv[1:])
+    clingo.clingo_main(SudokuApp(sys.argv[0]), sys.argv[1:])
