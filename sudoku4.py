@@ -2,27 +2,21 @@ import sys
 import clingo
 from sudoku_board import Sudoku
 
+class SudokuApp(clingo.ClingoApp):
+    def __init__(self, name):
+        self.program_name = name
 
-class SudokuApp(clingo.Application):
-
-    def __init__(self):
-        self.program_name = "sudoku"
-
-    # Load encoding and instance, then solve. 
-    def main(self, ctl, files):
-        ctl.load("sudoku.lp")
-
+    def main(self, control, files):
+        control.load("sudoku.lp")
         for f in files:
-            ctl.load(f)
+            control.load(f)
+        control.ground([("base", [])])
+        control.solve()
 
-        ctl.ground([("base", [])])
-        ctl.solve(on_model=self.on_model)
-
-    # Convert model to Sudoku and print formatted board.
-    def on_model(self, model):
-        sudoku = Sudoku.from_model(model)
-        print(sudoku)
-
+    def print_model(self, model):
+        # Question 4: Use the __str__ method from Sudoku class
+        sudoku_obj = Sudoku.from_model(model)
+        print(sudoku_obj)
 
 if __name__ == "__main__":
-    clingo.clingo_main(SudokuApp(), sys.argv[1:])
+    clingo.clingo_main(SudokuApp(sys.argv[0]), sys.argv[1:])
